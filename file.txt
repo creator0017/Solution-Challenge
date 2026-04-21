@@ -1,0 +1,96 @@
+fairsight-ai/
+│
+├── frontend/                          ← React + Vite app
+│   ├── index.html                     ← Vite entry point
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── .env                           ← Firebase keys (VITE_ prefix)
+│   │
+│   └── src/
+│       ├── main.jsx                   ← React entry, mounts App
+│       ├── App.jsx                    ← React Router — all 17 routes
+│       │
+│       ├── pages/                     ← One file per page
+│       │   ├── Splash.jsx             ← Page 1
+│       │   ├── Login.jsx              ← Page 2
+│       │   ├── Register.jsx           ← Page 3
+│       │   ├── OTP.jsx                ← Page 4
+│       │   ├── Home.jsx               ← Page 5
+│       │   ├── SectorSelect.jsx       ← Page 6
+│       │   ├── Upload.jsx             ← Page 7
+│       │   ├── Processing.jsx         ← Page 8
+│       │   ├── Results.jsx            ← Page 9  ← most complex
+│       │   ├── GeminiChat.jsx         ← Page 10
+│       │   ├── ComplianceReport.jsx   ← Page 11
+│       │   ├── AuditHistory.jsx       ← Page 12
+│       │   ├── Settings.jsx           ← Page 13
+│       │   ├── Pricing.jsx            ← Page 15
+│       │   └── NotFound.jsx           ← Page 14 — 404
+│       │
+│       ├── components/                ← Reusable across pages
+│       │   ├── Navbar.jsx             ← Sticky top nav (logged in/out states)
+│       │   ├── ProgressBar.jsx        ← 4-step audit progress indicator
+│       │   ├── MetricCard.jsx         ← Single fairness metric (PASS/FAIL bar)
+│       │   ├── IndiaModuleCard.jsx    ← India proxies section
+│       │   ├── GeminiExplain.jsx      ← Gemini explanation + disclaimer
+│       │   ├── AutoFixCard.jsx        ← One-click fix + download
+│       │   ├── LanguageToggle.jsx     ← 5-language switcher
+│       │   ├── VerdictBanner.jsx      ← NON-COMPLIANT / COMPLIANT banner
+│       │   ├── SkeletonCard.jsx       ← Shimmer loading skeleton
+│       │   └── ProtectedRoute.jsx     ← Blocks unauthenticated access
+│       │
+│       ├── context/
+│       │   ├── AuthContext.jsx        ← Firebase auth state (user, loading)
+│       │   └── AuditContext.jsx       ← Current audit data shared across pages
+│       │
+│       ├── hooks/
+│       │   ├── useAuth.js             ← useAuth() — current user + sign out
+│       │   └── useAudit.js            ← useAudit() — run audit, get results
+│       │
+│       ├── services/
+│       │   ├── firebase.js            ← Firebase init + auth functions
+│       │   └── api.js                 ← All Axios calls to FastAPI
+│       │
+│       ├── styles/
+│       │   ├── globals.css            ← CSS variables, reset, base styles
+│       │   ├── components.css         ← Shared component styles
+│       │   └── pages.css              ← Page-specific styles
+│       │
+│       └── utils/
+│           ├── translations.js        ← All 5-language strings
+│           └── helpers.js             ← Format dates, numbers, etc
+│
+├── backend/                           ← FastAPI — unchanged
+│   ├── main.py
+│   ├── .env
+│   ├── .env.example
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   │
+│   ├── routers/
+│   │   ├── auth.py
+│   │   ├── audit.py
+│   │   └── report.py
+│   │
+│   ├── services/
+│   │   ├── cleaner.py
+│   │   ├── india_module.py
+│   │   ├── bias_engine.py
+│   │   ├── gemini_service.py
+│   │   └── pdf_service.py
+│   │
+│   ├── models/
+│   │   └── schemas.py
+│   │
+│   ├── data/
+│   │   ├── india_surnames.json
+│   │   └── pincode_tiers.json
+│   │
+│   └── demo-data/
+│       ├── generate_data.py
+│       ├── banking_demo_india.csv
+│       └── banking_demo_india.xlsx
+│
+├── .gitignore
+├── README.md
+└── firebase.json

@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart  <-- Add this line
+aif360
+google-generativeai
+pandas
+openpyxl
+fpdf2
+python-dotenv
+pydantic
+scikit-learn
