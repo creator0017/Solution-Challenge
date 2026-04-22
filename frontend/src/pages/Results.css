@@ -1,0 +1,8 @@
+/* Results page — scoped styles */
+.btn-purple {
+  background: var(--purple);
+  color: #fff;
+}
+.btn-purple:hover {
+  background: #4A148C;
+}
