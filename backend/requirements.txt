@@ -1,11 +1,14 @@
 fastapi
 uvicorn[standard]
-python-multipart  <-- Add this line
+python-multipart
 aif360
 google-generativeai
 pandas
+numpy
+scikit-learn
 openpyxl
 fpdf2
 python-dotenv
-pydantic
-scikit-learn
+pydantic[email]
+firebase-admin
+ 
