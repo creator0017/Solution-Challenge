@@ -222,7 +222,7 @@ export default function Results() {
         <Stepper active={3} />
 
         {/* KPI cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div className="kpi-grid" style={{ marginBottom: 24 }}>
           {kpis.map(k => (
             <div key={k.l} className="card" style={{ padding: 20, position: 'relative' }}>
               <div style={{ width: 32, height: 32, borderRadius: 8, background: k.bg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
@@ -293,7 +293,7 @@ export default function Results() {
             <h3 style={{ fontSize: 16, margin: 0 }}>India Context Module</h3>
             <div className="pill" style={{ background: '#fff', color: 'var(--green-pass)', border: '1px solid #A5D6A7' }}>Unique to FairSight</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="india-module-grid">
             {[
               {
                 title: 'Pincode 560034–560099',
@@ -380,7 +380,7 @@ export default function Results() {
         )}
 
         {/* Action buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div className="action-btns-grid">
           <button className="btn btn-purple btn-lg" onClick={() => navigate('/gemini-chat')}>
             G Ask Gemini →
           </button>

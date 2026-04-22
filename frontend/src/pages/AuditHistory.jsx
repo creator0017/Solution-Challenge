@@ -46,7 +46,7 @@ export default function AuditHistory() {
         </div>
 
         {filtered.length > 0 ? (
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="table-scroll"><div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '150px 1.5fr 120px 180px 120px 130px', padding: '14px 24px', background: 'var(--bg-grey)', fontSize: 11, fontWeight: 600, color: 'var(--text-grey)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
               <div>Date</div><div>Model name</div><div>Sector</div><div>Verdict</div><div>Metrics</div><div></div>
             </div>
@@ -67,7 +67,7 @@ export default function AuditHistory() {
                 <div style={{ color: 'var(--teal)', fontWeight: 500, fontSize: 13 }}>View report →</div>
               </div>
             ))}
-          </div>
+          </div></div>
         ) : (
           <div className="card" style={{ padding: 64, textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--bg-grey)', color: 'var(--text-light)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>📋</div>

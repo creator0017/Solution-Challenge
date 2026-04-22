@@ -1,0 +1,71 @@
+/* ── Page layout grids ─────────────────────────────────────────────────────── */
+
+.hero-grid    { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 64px; align-items: center; }
+
+.stats-grid    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.steps-grid    { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; position: relative; z-index: 1; }
+.sectors-grid  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+.kpi-grid           { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.india-module-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.action-btns-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.auth-grid { display: grid; grid-template-columns: 45% 55%; min-height: 100vh; }
+
+/* Section vertical padding */
+.section-hero { padding: 64px 32px 80px; }
+.section-lg   { padding: 96px 32px; }
+.section-md   { padding: 80px 32px; }
+
+/* Pricing grid */
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 64px; }
+
+/* Table with horizontal scroll */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll > .card { min-width: 700px; }
+
+/* CTA strip */
+.cta-strip {
+  background: var(--text-dark);
+  color: #fff;
+  padding: 56px 48px;
+  border-radius: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Tablet ≤ 960px ──────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .hero-grid    { grid-template-columns: 1fr; gap: 40px; }
+  .hero-mockup  { display: none; }
+  .steps-grid   { grid-template-columns: repeat(2, 1fr); }
+  .sectors-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid     { grid-template-columns: repeat(2, 1fr); }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .section-hero { padding: 48px 24px 56px; }
+  .section-lg   { padding: 64px 24px; }
+  .section-md   { padding: 56px 24px; }
+}
+
+/* ── Mobile ≤ 600px ──────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .stats-grid        { grid-template-columns: 1fr; gap: 12px; }
+  .steps-grid        { grid-template-columns: 1fr; gap: 12px; }
+  .sectors-grid      { grid-template-columns: 1fr; gap: 12px; }
+  .features-grid     { grid-template-columns: 1fr; gap: 12px; }
+  .auth-grid         { grid-template-columns: 1fr; }
+  .auth-left         { display: none; }
+  .india-module-grid { grid-template-columns: 1fr; }
+  .action-btns-grid  { grid-template-columns: 1fr; gap: 10px; }
+  .kpi-grid          { gap: 10px; }
+  .section-hero { padding: 32px 16px 48px; }
+  .section-lg   { padding: 40px 16px; }
+  .section-md   { padding: 32px 16px; }
+  .cta-strip    { padding: 32px 20px; border-radius: 16px; flex-direction: column; text-align: center; }
+}

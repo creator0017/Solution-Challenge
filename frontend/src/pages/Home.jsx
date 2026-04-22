@@ -51,9 +51,9 @@ export default function Home() {
   return (
     <div className="page-enter">
       {/* ── HERO ── */}
-      <section style={{ minHeight: '90vh', background: '#fff', position: 'relative', overflow: 'hidden', padding: '64px 32px 80px' }}>
+      <section className="section-hero" style={{ minHeight: '90vh', background: '#fff', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -160, right: -160, width: 480, height: 480, borderRadius: 999, background: 'radial-gradient(circle, rgba(15,118,110,0.08) 0%, rgba(15,118,110,0) 70%)', pointerEvents: 'none' }}/>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 64, alignItems: 'center' }}>
+        <div className="container hero-grid">
           <div>
             <div className="pill pill-teal" style={{ marginBottom: 20 }}>
               ✦ Solution Challenge 2026 · Build with AI
@@ -76,7 +76,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div style={{ position: 'relative', minHeight: 460 }}>
+          <div className="hero-mockup" style={{ position: 'relative', minHeight: 460 }}>
             <AuditMockupCard style={{ position: 'absolute', top: 40, left: 40, right: 0, transform: 'rotate(2deg)', opacity: 0.35, filter: 'blur(0.3px)' }} ghost />
             <AuditMockupCard style={{ position: 'relative', transform: 'rotate(-2deg)', zIndex: 2 }} />
           </div>
@@ -84,13 +84,13 @@ export default function Home() {
       </section>
 
       {/* ── PROBLEM STATS ── */}
-      <section style={{ background: 'var(--bg-grey)', padding: '80px 32px' }}>
+      <section className="section-md" style={{ background: 'var(--bg-grey)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>THE PROBLEM</div>
-            <h2 style={{ fontSize: 36, letterSpacing: '-0.02em' }}>AI is everywhere. Bias audits aren't.</h2>
+            <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', letterSpacing: '-0.02em' }}>AI is everywhere. Bias audits aren't.</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+          <div className="stats-grid">
             {[
               { big: '85%', lbl: 'of businesses never audit their AI', color: 'var(--red-fail)', bigSize: 72 },
               { big: '35–60%', lbl: 'of ML models show measurable bias', color: 'var(--orange)', bigSize: 64 },
@@ -106,15 +106,15 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section style={{ padding: '96px 32px', background: '#fff' }}>
+      <section className="section-lg" style={{ background: '#fff' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>HOW IT WORKS</div>
-            <h2 style={{ fontSize: 36, letterSpacing: '-0.02em' }}>From messy data to fair AI in 4 steps</h2>
+            <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', letterSpacing: '-0.02em' }}>From messy data to fair AI in 4 steps</h2>
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', top: 32, left: '12.5%', right: '12.5%', height: 2, borderTop: '2px dashed #D1D5DB', zIndex: 0 }}/>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, position: 'relative', zIndex: 1 }}>
+            <div className="steps-grid">
               {[
                 { n: 1, title: 'Upload', body: 'CSV, Excel, .pkl or .onnx — no Python, no data-science prerequisites.', badge: null },
                 { n: 2, title: 'Bias detected', body: 'AIF360 runs 8+ fairness metrics across every protected attribute.', badge: null },
@@ -139,16 +139,16 @@ export default function Home() {
       </section>
 
       {/* ── SECTORS ── */}
-      <section style={{ padding: '80px 32px', background: 'var(--bg-grey)' }}>
+      <section className="section-md" style={{ background: 'var(--bg-grey)' }}>
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>SECTORS</div>
-              <h2 style={{ fontSize: 36, letterSpacing: '-0.02em' }}>Built for high-stakes decisions</h2>
+              <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', letterSpacing: '-0.02em' }}>Built for high-stakes decisions</h2>
             </div>
             <button className="btn btn-outline" onClick={() => navigate('/sector')}>See all sectors →</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+          <div className="sectors-grid">
             {[
               { name: 'Banking & Credit', desc: 'Loan approval, credit scoring, KYC risk. DPDP Act + EU AI Act aligned.', tags: ['DPDP Act', 'Disparate impact'] },
               { name: 'Hiring & HR', desc: 'Resume screeners, candidate ranking. EEOC-aligned for multinationals.', tags: ['EEOC', 'Surname bias'] },
@@ -175,14 +175,14 @@ export default function Home() {
       </section>
 
       {/* ── KEY FEATURES ── */}
-      <section style={{ padding: '96px 32px', background: '#fff' }}>
+      <section className="section-lg" style={{ background: '#fff' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>KEY FEATURES</div>
-            <h2 style={{ fontSize: 36, letterSpacing: '-0.02em', marginBottom: 12 }}>Everything existing tools are missing</h2>
+            <h2 style={{ fontSize: 'clamp(22px,4vw,36px)', letterSpacing: '-0.02em', marginBottom: 12 }}>Everything existing tools are missing</h2>
             <p style={{ color: 'var(--text-grey)', fontSize: 16, maxWidth: 560, margin: '0 auto' }}>IBM AIF360 gives you numbers. Google's What-If Tool needs Python. FairSight is the first end-to-end workflow built for Indian compliance teams.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
+          <div className="features-grid">
             {[
               { title: 'India Context Module', body: "Caste-proxy detection via surnames, pincodes, school names, father's occupation. No other tool does this.", badge: 'Globally unique', tone: 'teal' },
               { title: 'Gemini AI explanations', body: 'Every metric explained in plain English. Your compliance officer understands. No data science team needed.', badge: 'Powered by Gemini 1.5 Pro', tone: 'purple' },
@@ -205,13 +205,14 @@ export default function Home() {
       </section>
 
       {/* ── COMPARISON ── */}
-      <section style={{ padding: '80px 32px', background: 'var(--bg-grey)' }}>
+      <section className="section-md" style={{ background: 'var(--bg-grey)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--teal)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>COMPARISON</div>
-            <h2 style={{ fontSize: 36, letterSpacing: '-0.02em' }}>Why teams choose FairSight</h2>
+            <h2 style={{ fontSize: 'clamp(22px,4vw,36px)', letterSpacing: '-0.02em' }}>Why teams choose FairSight</h2>
           </div>
-          <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
+          <div className="compare-scroll">
+          <div className="card compare-table" style={{ overflow: 'hidden', padding: 0 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr', fontSize: 13 }}>
               {['Feature', 'IBM AIF360', 'What-If Tool', 'FairSight AI'].map((h, i) => (
                 <div key={h} style={{ padding: '20px 24px', fontWeight: i === 3 ? 700 : 600, textAlign: i > 0 ? 'center' : 'left', color: i === 3 ? 'var(--teal)' : 'var(--text-grey)', fontSize: 12, letterSpacing: 0.8, textTransform: 'uppercase', background: i === 3 ? 'var(--teal-bg)' : '#fff', borderLeft: i === 3 ? '1px solid var(--teal-border)' : 'none', borderRight: i === 3 ? '1px solid var(--teal-border)' : 'none' }}>{h}</div>
@@ -238,16 +239,17 @@ export default function Home() {
               ))}
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* ── CTA STRIP ── */}
-      <section style={{ padding: '80px 32px', background: '#fff' }}>
+      <section className="section-md" style={{ background: '#fff' }}>
         <div className="container">
-          <div style={{ background: 'var(--text-dark)', color: '#fff', padding: '56px 48px', borderRadius: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 32, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
+          <div className="cta-strip">
             <div style={{ position: 'absolute', right: -80, top: -80, width: 280, height: 280, borderRadius: 999, background: 'radial-gradient(circle, rgba(15,118,110,0.4) 0%, rgba(15,118,110,0) 70%)', pointerEvents: 'none' }}/>
             <div style={{ zIndex: 2, maxWidth: 560 }}>
-              <h2 style={{ color: '#fff', fontSize: 32, marginBottom: 12, letterSpacing: '-0.02em' }}>See your first bias report in 60 seconds.</h2>
+              <h2 style={{ color: '#fff', fontSize: 'clamp(22px,4vw,32px)', marginBottom: 12, letterSpacing: '-0.02em' }}>See your first bias report in 60 seconds.</h2>
               <p style={{ color: '#9CA3AF', fontSize: 16 }}>No credit card. 3 free audits every month. DPDP-ready.</p>
             </div>
             <button className="btn btn-primary btn-lg" onClick={() => navigate('/sector')} style={{ zIndex: 2 }}>Start free audit →</button>

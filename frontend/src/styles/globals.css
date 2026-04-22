@@ -138,3 +138,21 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 
 @media (max-width: 900px) { .nav-links, .desktop-only { display: none !important; } .hamburger { display: flex; } }
 @media (max-width: 768px) { .footer-cols { grid-template-columns: 1fr 1fr; } }
+
+/* ── Mobile global overrides ─────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .container { padding: 0 24px; }
+}
+
+@media (max-width: 600px) {
+  html, body { font-size: 15px; }
+  .container, .container-narrow, .container-med, .container-chat { padding: 0 16px; }
+  .nav-inner { padding: 0 16px; gap: 12px; }
+  .footer { padding: 40px 16px 24px; }
+  .footer-cols { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .stepper { justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; gap: 4px; flex-wrap: nowrap; }
+  .step-sep { width: 10px; flex-shrink: 0; }
+  .step span { font-size: 11px; }
+  h1 { font-size: clamp(28px, 8vw, 48px); }
+  h2 { font-size: clamp(20px, 6vw, 36px); }
+}

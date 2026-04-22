@@ -75,7 +75,7 @@ export default function Pricing() {
         </div>
 
         {/* Tier cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 64 }}>
+        <div className="pricing-grid" style={{ marginBottom: 64 }}>
           {TIERS.map(t => (
             <div key={t.name} className="card" style={{ padding: 32, position: 'relative', border: t.popular ? '2px solid var(--teal)' : '1px solid var(--border)', boxShadow: t.popular ? '0 8px 32px rgba(15,118,110,0.2)' : 'var(--shadow-card)', transform: t.popular ? 'translateY(-8px)' : 'none' }}>
               {t.popular && (

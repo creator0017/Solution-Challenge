@@ -24,8 +24,8 @@ export default function Login() {
   }
 
   return (
-    <div className="page-enter" style={{ display: 'grid', gridTemplateColumns: '45% 55%', minHeight: '100vh' }}>
-      <AuthLeft />
+    <div className="page-enter auth-grid">
+      <div className="auth-left"><AuthLeft /></div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <form onSubmit={submit} style={{ width: '100%', maxWidth: 400 }}>
           <h1 style={{ fontSize: 26, marginBottom: 6 }}>Welcome back</h1>
