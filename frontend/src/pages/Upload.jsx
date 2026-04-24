@@ -1,6 +1,9 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuditContext } from '../context/AuditContext'
+import { storage, db } from '../services/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { collection, addDoc } from 'firebase/firestore'
 
 function Stepper({ active }) {
   const steps = ['Sector', 'Upload', 'Processing', 'Results']
@@ -21,20 +24,55 @@ function Stepper({ active }) {
 
 export default function Upload() {
   const navigate = useNavigate()
-  const { sector } = useContext(AuditContext)
+  const { sector, setFileId } = useContext(AuditContext)
   const [file, setFile] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
   const [attrs, setAttrs] = useState({
     'Gender': true, 'Age': true, 'Pincode': true, "Father's Occupation": true, 'Marital Status': false,
   })
 
+  const handleFile = (f) => {
+    if (f) {
+      setFile({ name: f.name, size: (f.size / 1024 / 1024).toFixed(1) + ' MB', rows: 'Pending analysis', obj: f })
+    }
+  }
+
   const drop = (e) => {
     e.preventDefault(); setDragOver(false)
     const f = e.dataTransfer.files?.[0]
-    if (f) setFile({ name: f.name, size: (f.size / 1024 / 1024).toFixed(1) + ' MB', rows: '47,832 rows' })
+    handleFile(f)
   }
 
-  const fakeUpload = () => setFile({ name: 'home_loan_applicants_2015_2025.csv', size: '8.2 MB', rows: '47,832 rows' })
+  const handleFileInputChange = (e) => {
+    const f = e.target.files?.[0]
+    handleFile(f)
+  }
+
+  const handleRunAudit = async () => {
+    if (!file || !file.obj) return
+    setUploading(true)
+    try {
+      const storageRef = ref(storage, `datasets/${Date.now()}_${file.name}`)
+      await uploadBytes(storageRef, file.obj)
+      const url = await getDownloadURL(storageRef)
+      
+      const docRef = await addDoc(collection(db, 'audits'), {
+        fileName: file.name,
+        fileSize: file.size,
+        fileUrl: url,
+        createdAt: new Date().toISOString()
+      })
+      
+      setFileId(docRef.id)
+      navigate('/processing')
+    } catch (e) {
+      console.error(e)
+      alert("Failed to upload file")
+      setUploading(false)
+    }
+  }
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg-grey)', minHeight: 'calc(100vh - 64px)', padding: '48px 24px 80px' }}>
@@ -47,26 +85,35 @@ export default function Upload() {
         </div>
 
         <h1 style={{ fontSize: 32, marginBottom: 8 }}>Upload your dataset</h1>
-        <p style={{ color: 'var(--text-grey)', fontSize: 15, marginBottom: 24 }}>CSV, Excel, .pkl or .onnx. Max 50 MB.</p>
+        <p style={{ color: 'var(--text-grey)', fontSize: 15, marginBottom: 24 }}>CSV, Excel, .pkl, .onnx, PDF, or Images. Max 50 MB.</p>
 
         {!file ? (
-          <div
-            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={drop}
-            onClick={fakeUpload}
-            style={{
-              border: `2px dashed ${dragOver ? 'var(--teal)' : 'var(--border)'}`,
-              background: dragOver ? 'var(--teal-bg)' : '#fff',
-              borderRadius: 16, padding: '56px 32px', textAlign: 'center',
-              cursor: 'pointer', transition: 'all 180ms', marginBottom: 24,
-            }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--teal-bg)', color: 'var(--teal)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-              ↑
+          <>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileInputChange} 
+              style={{ display: 'none' }} 
+              accept=".pdf, image/*, .csv, .xlsx, .pkl, .onnx"
+            />
+            <div
+              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={drop}
+              onClick={() => fileInputRef.current.click()}
+              style={{
+                border: `2px dashed ${dragOver ? 'var(--teal)' : 'var(--border)'}`,
+                background: dragOver ? 'var(--teal-bg)' : '#fff',
+                borderRadius: 16, padding: '56px 32px', textAlign: 'center',
+                cursor: 'pointer', transition: 'all 180ms', marginBottom: 24,
+              }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--teal-bg)', color: 'var(--teal)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                ↑
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Drop your dataset here</div>
+              <div style={{ fontSize: 13, color: 'var(--text-grey)' }}>or click to browse · PDF, Images, CSV, Excel · max 50MB</div>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Drop your dataset here</div>
-            <div style={{ fontSize: 13, color: 'var(--text-grey)' }}>or click to browse · CSV, Excel, .pkl, .onnx · max 50MB</div>
-          </div>
+          </>
         ) : (
           <div style={{ background: 'var(--green-bg)', border: '1px solid #A5D6A7', borderRadius: 16, padding: 20, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ width: 44, height: 44, borderRadius: 10, background: '#fff', color: 'var(--green-pass)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
@@ -108,8 +155,8 @@ export default function Upload() {
           </div>
         )}
 
-        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={!file} onClick={() => navigate('/processing')}>
-          Run bias audit →
+        <button className="btn btn-primary btn-lg" style={{ width: '100%', opacity: uploading ? 0.7 : 1 }} disabled={!file || uploading} onClick={handleRunAudit}>
+          {uploading ? 'Uploading...' : 'Run bias audit →'}
         </button>
       </div>
     </div>

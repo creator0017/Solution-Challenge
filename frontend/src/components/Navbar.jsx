@@ -1,13 +1,14 @@
 import { useState, useEffect, useContext, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
+import { logout } from '../services/firebase'
 
 export default function Navbar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { user, setUser } = useContext(AuthContext)
-  const [scrolled, setScrolled] = useState(false)
-  const [dropdown, setDropdown] = useState(false)
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const { user, profile } = useContext(AuthContext)
+  const [scrolled, setScrolled]     = useState(false)
+  const [dropdown, setDropdown]     = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const dropRef = useRef()
 
@@ -18,29 +19,37 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    const onClick = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropdown(false) }
+    const onClick = e => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropdown(false) }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  // Hide navbar on auth pages
+  // Hide on auth pages
   const hideOn = ['/', '/login', '/register', '/verify-otp']
   if (hideOn.includes(location.pathname)) return null
 
   const route = location.pathname
 
+  async function handleLogout() {
+    setDropdown(false)
+    await logout()
+    navigate('/login')
+  }
+
+  // Display name: prefer Firestore profile name, fallback to Firebase displayName, then email
+  const displayName = profile?.name || user?.displayName || user?.email?.split('@')[0] || 'User'
+  const initials    = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+
   const NAV_LINKS = [
-    { label: 'Home', path: '/home' },
-    { label: 'How it works', path: '/home' },
-    { label: 'Sectors', path: '/sector' },
-    { label: 'Pricing', path: '/pricing' },
+    { label: 'Home',      path: '/home' },
+    { label: 'Sectors',   path: '/sector' },
+    { label: 'Pricing',   path: '/pricing' },
   ]
 
   return (
     <>
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-inner">
-          {/* Logo */}
           <div className="logo-row" onClick={() => navigate('/home')}>
             <div className="logomark">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -56,7 +65,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Nav links */}
           <div className="nav-links">
             {NAV_LINKS.map(l => (
               <span key={l.label} className={`nav-link ${route === l.path ? 'active' : ''}`} onClick={() => navigate(l.path)}>
@@ -65,7 +73,6 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Right */}
           <div className="nav-right">
             {!user ? (
               <>
@@ -74,27 +81,34 @@ export default function Navbar() {
               </>
             ) : (
               <div style={{ position: 'relative' }} ref={dropRef}>
-                <div className="avatar" onClick={() => setDropdown(d => !d)}>
-                  {user.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'MS'}
+                <div className="avatar" onClick={() => setDropdown(d => !d)} title={displayName}>
+                  {initials}
                 </div>
                 {dropdown && (
                   <div className="nav-dropdown">
-                    <div style={{ padding: '10px 12px 6px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{user.name}</div>
+                    <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{displayName}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>{user.email}</div>
+                      {!user.emailVerified && (
+                        <div style={{ fontSize: 11, color: 'var(--orange)', marginTop: 4 }}>⚠ Email not verified</div>
+                      )}
                     </div>
-                    <div className="nav-dropdown-item" onClick={() => { navigate('/home'); setDropdown(false) }}>🏠 My Dashboard</div>
-                    <div className="nav-dropdown-item" onClick={() => { navigate('/sector'); setDropdown(false) }}>+ New Audit</div>
-                    <div className="nav-dropdown-item" onClick={() => { navigate('/history'); setDropdown(false) }}>📋 History</div>
-                    <div className="nav-dropdown-item" onClick={() => { navigate('/settings'); setDropdown(false) }}>⚙ Settings</div>
-                    <div className="nav-dropdown-divider" />
-                    <div className="nav-dropdown-item danger" onClick={() => { setUser(null); navigate('/login'); setDropdown(false) }}>Sign out</div>
+                    {[
+                      { label: '🏠 Dashboard', path: '/home' },
+                      { label: '+ New Audit',  path: '/sector' },
+                      { label: '📋 History',   path: '/history' },
+                      { label: '⚙ Settings',   path: '/settings' },
+                    ].map(item => (
+                      <div key={item.path} className="nav-dropdown-item" onClick={() => { navigate(item.path); setDropdown(false) }}>
+                        {item.label}
+                      </div>
+                    ))}
+                    <div className="nav-dropdown-divider"/>
+                    <div className="nav-dropdown-item danger" onClick={handleLogout}>Sign out</div>
                   </div>
                 )}
               </div>
             )}
-
-            {/* Hamburger */}
             <button className="hamburger" onClick={() => setMobileOpen(true)}>
               <span/><span/><span/>
             </button>
@@ -113,15 +127,15 @@ export default function Navbar() {
         </div>
 
         {user && (
-          <div style={{ padding: '16px 24px 12px', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{user.name}</div>
+          <div style={{ padding: '14px 24px 10px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{displayName}</div>
             <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>{user.email}</div>
           </div>
         )}
 
         <div style={{ padding: '8px 24px', flex: 1 }}>
           {[...NAV_LINKS, ...(user ? [{ label: 'History', path: '/history' }, { label: 'Settings', path: '/settings' }] : [])].map(l => (
-            <div key={l.label} onClick={() => { navigate(l.path); setMobileOpen(false) }}
+            <div key={l.path} onClick={() => { navigate(l.path); setMobileOpen(false) }}
               style={{ height: 52, display: 'flex', alignItems: 'center', fontSize: 16, color: route === l.path ? 'var(--teal)' : 'var(--text-dark)', fontWeight: route === l.path ? 600 : 400, borderBottom: '1px solid #F3F4F6', cursor: 'pointer' }}>
               {l.label}
             </div>
@@ -134,7 +148,7 @@ export default function Navbar() {
           </button>
           {user && (
             <button style={{ width: '100%', marginTop: 12, padding: '12px 0', color: 'var(--red-fail)', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-              onClick={() => { setUser(null); navigate('/login'); setMobileOpen(false) }}>
+              onClick={handleLogout}>
               Sign out
             </button>
           )}

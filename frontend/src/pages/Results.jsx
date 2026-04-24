@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AuditContext } from '../context/AuditContext'
+import { db } from '../services/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 import './Results.css'
 
 // ── Stepper ───────────────────────────────────────────────────────────────────
@@ -116,8 +119,20 @@ function FixOverlay({ fixState, fixStep }) {
 // ── Main Results Page ─────────────────────────────────────────────────────────
 export default function Results() {
   const navigate = useNavigate()
+  const { fileId } = useContext(AuditContext)
+  const [fileMeta, setFileMeta] = useState(null)
   const [fixState, setFixState] = useState('idle') // idle | fixing | success | compliant
   const [fixStep, setFixStep] = useState(0)
+
+  useEffect(() => {
+    if (fileId) {
+      getDoc(doc(db, 'audits', fileId)).then(snap => {
+        if (snap.exists()) {
+          setFileMeta(snap.data())
+        }
+      }).catch(err => console.error("Failed to load file meta", err))
+    }
+  }, [fileId])
 
   const compliant = fixState === 'compliant'
 
@@ -210,8 +225,8 @@ export default function Results() {
           <div className="card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, borderLeft: '4px solid var(--teal)' }}>
             <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--teal-bg)', color: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>📄</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>home_loan_applicants_2015_2025_FIXED.csv</div>
-              <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>47,832 rows · reweighed · Father's Occupation removed · 8.4 MB</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{fileMeta ? fileMeta.fileName.replace(/\.[^/.]+$/, "") + "_FIXED.csv" : "home_loan_applicants_2015_2025_FIXED.csv"}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>47,832 rows · reweighed · Father's Occupation removed · {fileMeta ? fileMeta.fileSize : "8.4 MB"}</div>
             </div>
             <button className="btn btn-primary">↓ Download fixed CSV</button>
           </div>
