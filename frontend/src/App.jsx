@@ -17,7 +17,6 @@ import GeminiChat from './pages/GeminiChat'
 import ComplianceReport from './pages/ComplianceReport'
 import AuditHistory from './pages/AuditHistory'
 import Settings from './pages/Settings'
-import Pricing from './pages/Pricing'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -31,7 +30,6 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<OTP />} />
-            <Route path="/pricing" element={<Pricing />} />
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/sector" element={<ProtectedRoute><SectorSelect /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />

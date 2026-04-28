@@ -26,15 +26,35 @@ async def run_initial_audit(file: UploadFile = File(...)):
     try:
         # 1. Read the uploaded file
         contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+        filename = (file.filename or "").lower()
+        if filename.endswith(".xlsx") or filename.endswith(".xls"):
+            df = pd.read_excel(io.BytesIO(contents))
+        else:
+            df = pd.read_csv(io.BytesIO(contents))
         
         # 2. Map Indian Proxies to Binary Groups for AIF360
-        # We transform 'Urban Pincodes' to 1 (Privileged) and others to 0
         urban_pincodes = [560001, 560008, 560038, 560067]
-        df['is_privileged'] = df['Residential_Pincode'].apply(
-            lambda x: 1 if x in urban_pincodes else 0
+        pincode_col = next(
+            (c for c in df.columns if 'pincode' in c.lower() or 'zip' in c.lower()),
+            None
         )
-        
+        if pincode_col:
+            df['is_privileged'] = df[pincode_col].apply(
+                lambda x: 1 if x in urban_pincodes else 0
+            )
+        else:
+            df['is_privileged'] = 0
+
+        # AIF360 cannot handle NA values — drop rows with NAs in required columns
+        required_cols = ['Loan_Status', 'is_privileged']
+        existing_required = [c for c in required_cols if c in df.columns]
+        df = df.dropna(subset=existing_required)
+        # Fill remaining NAs in numeric cols with median, categorical with mode
+        for col in df.select_dtypes(include='number').columns:
+            df[col] = df[col].fillna(df[col].median())
+        for col in df.select_dtypes(include='object').columns:
+            df[col] = df[col].fillna(df[col].mode()[0] if not df[col].mode().empty else 'Unknown')
+
         # Store in temp memory for the next "Fix" step
         temp_storage["last_df"] = df.copy()
 
@@ -86,6 +106,15 @@ async def apply_remediation():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/demo-file")
+async def get_demo_file():
+    """Serve the demo CSV for testing"""
+    demo_path = os.path.join(os.path.dirname(__file__), "..", "demo-data", "banking_demo_india.csv")
+    demo_path = os.path.abspath(demo_path)
+    if not os.path.exists(demo_path):
+        raise HTTPException(status_code=404, detail="Demo file not found.")
+    return FileResponse(path=demo_path, filename="banking_demo_india.csv", media_type="text/csv")
 
 @router.get("/download-fixed")
 async def download_remediated_file():

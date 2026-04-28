@@ -9,7 +9,12 @@ class BiasAuditEngine:
         self.unprivileged_groups = [{'is_privileged': 0}]
 
     def create_dataset(self, df, target_column='Loan_Status', protected_attribute='is_privileged'):
-        # AIF360 requires a very specific 'BinaryLabelDataset' structure
+        df = df.dropna(subset=[target_column, protected_attribute])
+        df = df.copy()
+        for col in df.select_dtypes(include='number').columns:
+            df[col] = df[col].fillna(df[col].median())
+        for col in df.select_dtypes(include='object').columns:
+            df[col] = df[col].fillna('Unknown')
         return BinaryLabelDataset(
             df=df,
             label_names=[target_column],

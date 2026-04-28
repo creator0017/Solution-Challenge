@@ -1,5 +1,14 @@
 // Shared left panel used by Login and Register pages
-export default function AuthLeft() {
+export default function AuthLeft({ 
+  header = "Start Your Fairness Journey", 
+  features = [
+    ['No-Code Auditing', 'Join today and start auditing your AI models in under 60 seconds—no coding required.'],
+    ['India Context Ready', 'Get immediate access to our specialized module for regional and surname bias detection.'],
+    ['Gemini AI Insights', 'Sign up to receive plain-English explanations for every complex mathematical finding.'],
+    ['DPDP Ready', 'Start building your legal defense with reports aligned with the DPDP Act 2023.'],
+  ],
+  summary = "Create a free account to instantly detect hidden biases in your data and ensure legal compliance."
+}) {
   return (
     <div style={{ background: 'var(--teal)', color: '#fff', padding: '48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '100vh' }}>
       <div>
@@ -15,18 +24,14 @@ export default function AuthLeft() {
         </div>
 
         <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 32, letterSpacing: '-0.02em' }}>
-          Making AI fair for<br/>every Indian.
+          {header}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {[
-            ['Detect bias in 60 seconds', 'Upload CSV. Get a plain-English audit.'],
-            ['India caste proxy detection', 'Pincode, surname & school name scans.'],
-            ['DPDP Act compliance reports', 'Submit to RBI or court directly.'],
-          ].map(([t, s]) => (
-            <div key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <ul style={{ display: 'flex', flexDirection: 'column', gap: 18, listStyle: 'none', padding: 0, margin: 0 }}>
+          {features.map(([t, s]) => (
+            <li key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                   <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
@@ -34,8 +39,12 @@ export default function AuthLeft() {
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{t}</div>
                 <div style={{ fontSize: 13, opacity: 0.7 }}>{s}</div>
               </div>
-            </div>
+            </li>
           ))}
+        </ul>
+
+        <div style={{ marginTop: 24, padding: '16px 20px', background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', fontSize: 14, fontStyle: 'italic', lineHeight: 1.4 }}>
+          "{summary}"
         </div>
 
         <div style={{ marginTop: 40, padding: 24, background: 'rgba(255,255,255,0.08)', borderRadius: 16 }}>

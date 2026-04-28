@@ -43,7 +43,6 @@ export default function Navbar() {
   const NAV_LINKS = [
     { label: 'Home',      path: '/home' },
     { label: 'Sectors',   path: '/sector' },
-    { label: 'Pricing',   path: '/pricing' },
   ]
 
   return (

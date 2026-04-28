@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 import { loginWithEmail, loginWithGoogle, resetPassword } from '../services/firebase'
@@ -6,7 +6,7 @@ import AuthLeft from '../components/AuthLeft'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { user } = useContext(AuthContext)
+  const { user, loading: authLoading } = useContext(AuthContext)
 
   const [email, setEmail]   = useState('')
   const [pwd, setPwd]       = useState('')
@@ -16,8 +16,13 @@ export default function Login() {
   const [err, setErr]       = useState('')
   const [resetSent, setResetSent] = useState(false)
 
-  // Already logged in — go home
-  if (user) { navigate('/home'); return null }
+  // Already logged in — redirect safely in effect
+  useEffect(() => {
+    if (!authLoading && user) navigate('/home', { replace: true })
+  }, [user, authLoading, navigate])
+
+  // Still checking auth state
+  if (authLoading) return null
 
   // ── Email login ──────────────────────────────────────────────────────────────
   async function handleSubmit(e) {
@@ -73,12 +78,21 @@ export default function Login() {
 
   return (
     <div className="page-enter" style={{ display: 'grid', gridTemplateColumns: '45% 55%', minHeight: '100vh' }}>
-      <AuthLeft />
+      <AuthLeft 
+        header="Welcome Back to FairSight AI"
+        features={[
+          ['Access Your History', 'View all your previous bias audits and saved reports in one secure place.'],
+          ['Resume Work', 'Instantly pick up where you left off on your latest data analysis.'],
+          ['Manage Compliance', 'Download certified PDF reports for your board or the RBI.'],
+          ['Secure Access', 'Protected by bank-grade encryption to keep your institution\'s data safe.'],
+        ]}
+        summary="Sign in to manage your AI fairness dashboard and access saved compliance reports."
+      />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 400 }}>
           <h1 style={{ fontSize: 26, marginBottom: 6 }}>Welcome back</h1>
-          <div style={{ color: 'var(--text-grey)', fontSize: 14, marginBottom: 28 }}>Sign in to your audit dashboard</div>
+          <div style={{ color: 'var(--text-grey)', fontSize: 14, marginBottom: 28, lineHeight: 1.4 }}>Sign in to manage your AI fairness dashboard and access saved compliance reports.</div>
 
           {/* Error banner */}
           {err && (

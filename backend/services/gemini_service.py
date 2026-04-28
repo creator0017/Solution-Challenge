@@ -18,7 +18,7 @@ class GeminiXAIService:
     def __init__(self):
         self.api_key = os.getenv("GOOGLE_API_KEY", "")
         if not self.api_key:
-            print("⚠️  GOOGLE_API_KEY not set — Gemini will return demo explanation")
+            print("[WARN] GOOGLE_API_KEY not set - Gemini will return demo explanation")
 
         if NEW_SDK and self.api_key:
             self.client = genai.Client(api_key=self.api_key)

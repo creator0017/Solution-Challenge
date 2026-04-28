@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
 import LottieDefault from 'lottie-react'
 import logo from '../assets/io.png'
 import logoAnimation from '../assets/fairsight_loader.json'
@@ -13,6 +14,7 @@ export default function Splash() {
   const navigate   = useNavigate()
   const lottieRef  = useRef(null)
   const animRef    = useRef(null)
+  const { user }   = useContext(AuthContext)
   const [particles, setParticles] = useState([])
   const [glitters,  setGlitters]  = useState([])
   const [stage,     setStage]     = useState(0)
@@ -43,13 +45,16 @@ export default function Splash() {
     setParticles(generated)
     setGlitters(glitterGen)
 
-    const t1 = setTimeout(() => setStage(1), 400)
-    const t2 = setTimeout(() => setStage(2), 4200)
-    const t3 = setTimeout(() => setStage(3), 4800)
-    const t4 = setTimeout(() => navigate('/login'), 6800)
+    const t1 = setTimeout(() => setStage(1), 200)
+    const t2 = setTimeout(() => setStage(2), 2000)
+    const t3 = setTimeout(() => setStage(3), 2400)
+    const t4 = setTimeout(() => {
+      if (user) navigate('/home')
+      else navigate('/login')
+    }, 3500)
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
-  }, [navigate])
+  }, [navigate, user])
 
   return (
     <div style={{

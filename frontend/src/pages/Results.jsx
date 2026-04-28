@@ -3,66 +3,28 @@ import { useNavigate } from 'react-router-dom'
 import { AuditContext } from '../context/AuditContext'
 import { db } from '../services/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
 import './Results.css'
 
-// ── Stepper ───────────────────────────────────────────────────────────────────
-function Stepper({ active }) {
-  const steps = ['Sector', 'Upload', 'Processing', 'Results']
-  return (
-    <div className="stepper">
-      {steps.map((s, i) => (
-        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className={`step ${i === active ? 'active' : i < active ? 'done' : ''}`}>
-            <div className="num">{i < active ? '✓' : i + 1}</div>
-            <span>{s}</span>
-          </div>
-          {i < steps.length - 1 && <div className="step-sep" />}
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ── MetricCard ────────────────────────────────────────────────────────────────
-function MetricCard({ name, score, verdict, breakdown, single, threshold, note }) {
+function MetricCard({ name, score, verdict, note, val, color }) {
   const pass = verdict === 'PASS'
   return (
-    <div className="card" style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <h4 style={{ fontSize: 15, flex: 1, margin: 0 }}>{name}</h4>
-        <div style={{ fontSize: 18, fontWeight: 700, color: pass ? 'var(--green-pass)' : 'var(--red-fail)' }}>{score}</div>
-        <div className={`pill ${pass ? 'pill-green' : 'pill-red'}`} style={{ fontWeight: 600 }}>{verdict}</div>
+    <div className="card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 20 }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <h4 style={{ fontSize: 15, margin: 0, fontWeight: 600 }}>{name}</h4>
+          <div className={`pill ${pass ? 'pill-green' : 'pill-red'}`} style={{ fontSize: 11, padding: '2px 8px' }}>{verdict}</div>
+          <div style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 700, color: pass ? 'var(--green-pass)' : 'var(--red-fail)' }}>{score}</div>
+        </div>
+        
+        {/* Simple Bar */}
+        <div style={{ height: 6, background: '#F3F4F6', borderRadius: 999, marginBottom: 8, overflow: 'hidden' }}>
+          <div style={{ width: `${val}%`, height: '100%', background: color || (pass ? 'var(--green-pass)' : 'var(--red-fail)'), borderRadius: 999, transition: 'width 1s ease-out' }} />
+        </div>
+        
+        <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>{note}</div>
       </div>
-
-      {breakdown && (
-        <div style={{ marginBottom: 10 }}>
-          {breakdown.map(b => (
-            <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 180, fontSize: 12, color: 'var(--text-grey)', flexShrink: 0 }}>{b.label}</div>
-              <div style={{ flex: 1, height: 8, background: '#F3F4F6', borderRadius: 999, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ width: `${b.val}%`, height: '100%', background: b.color, borderRadius: 999, transition: 'width 800ms' }} />
-                {threshold && (
-                  <div style={{ position: 'absolute', left: `${threshold}%`, top: -3, bottom: -3, width: 2, background: 'var(--orange)' }} />
-                )}
-              </div>
-              <div style={{ width: 42, textAlign: 'right', fontSize: 12, fontWeight: 600, color: b.color }}>{b.val}%</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {single && (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ height: 10, background: '#F3F4F6', borderRadius: 999, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ width: `${single.val}%`, height: '100%', background: single.color, borderRadius: 999 }} />
-            {threshold && (
-              <div style={{ position: 'absolute', left: `${threshold}%`, top: -3, bottom: -3, width: 2, background: 'var(--orange)' }} />
-            )}
-          </div>
-        </div>
-      )}
-
-      <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>{note}</div>
     </div>
   )
 }
@@ -123,6 +85,7 @@ export default function Results() {
   const [fileMeta, setFileMeta] = useState(null)
   const [fixState, setFixState] = useState('idle') // idle | fixing | success | compliant
   const [fixStep, setFixStep] = useState(0)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (fileId) {
@@ -151,164 +114,152 @@ export default function Results() {
     }, 650)
   }
 
-  // KPI data
+  const handleDownloadReport = async () => {
+    try {
+      setDownloading(true)
+      const payload = {
+        sector: 'Banking / Loans',
+        verdict: compliant ? 'COMPLIANT' : 'NON-COMPLIANT',
+        score: compliant ? 0.83 : 0.60,
+        explanation: compliant 
+          ? 'Remediation complete. After applying AIF360 Reweighing to the pincode groups and dropping Father\'s Occupation, the model now scores women and men with equivalent income & credit history within 4 percentage points of each other.'
+          : 'Your Home Loan Approval v3.2 model systematically rejects women at 28 percentage points higher than identically-qualified men. The root cause is pincode.'
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${API_URL}/api/report/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) throw new Error('Failed to generate report')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'FairSight_Audit_Report.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to download report.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  // KPI data matching user request: Disparate Impact, Approval Gap, Checks Failed, India Proxies
   const kpis = compliant
     ? [
-        { v: '0',    l: 'metrics failed',       color: 'var(--green-pass)', bg: 'var(--green-bg)', delta: '−3' },
-        { v: '0.83', l: 'disparate impact',      color: 'var(--green-pass)', bg: 'var(--green-bg)', delta: '+0.23' },
-        { v: '4%',   l: 'parity gap (M vs W)',   color: 'var(--green-pass)', bg: 'var(--green-bg)', delta: '−24pp' },
-        { v: '0',    l: 'India proxies remain',  color: 'var(--green-pass)', bg: 'var(--green-bg)', delta: '−2' },
+        { v: '0.83', l: 'Disparate Impact', color: 'var(--green-pass)', bg: 'var(--green-bg)' },
+        { v: '4%',   l: 'Approval Gap',    color: 'var(--green-pass)', bg: 'var(--green-bg)' },
+        { v: '0',    l: 'Checks Failed',   color: 'var(--green-pass)', bg: 'var(--green-bg)' },
+        { v: '0',    l: 'India Proxies',    color: 'var(--green-pass)', bg: 'var(--green-bg)' },
       ]
     : [
-        { v: '3',    l: 'metrics failed',        color: 'var(--red-fail)',   bg: 'var(--red-bg)' },
-        { v: '0.60', l: 'disparate impact',      color: 'var(--orange)',     bg: '#FFF3E0' },
-        { v: '28%',  l: 'parity gap (M vs W)',   color: 'var(--red-fail)',   bg: 'var(--red-bg)' },
-        { v: '2',    l: 'India proxies flagged', color: 'var(--green-pass)', bg: 'var(--green-bg)' },
+        { v: '0.60', l: 'Disparate Impact', color: 'var(--orange)',     bg: '#FFF3E0' },
+        { v: '28%',  l: 'Approval Gap',    color: 'var(--red-fail)',   bg: 'var(--red-bg)' },
+        { v: '3',    l: 'Checks Failed',   color: 'var(--red-fail)',   bg: 'var(--red-bg)' },
+        { v: '2',    l: 'India Proxies',    color: 'var(--green-pass)', bg: 'var(--green-bg)' },
       ]
 
   return (
     <div className="page-enter" style={{ background: 'var(--bg-grey)', minHeight: 'calc(100vh - 64px)', paddingBottom: 80 }}>
 
-      {/* Fix overlay */}
       <FixOverlay fixState={fixState} fixStep={fixStep} />
 
-      {/* Verdict banner */}
-      {compliant ? (
-        <div className="page-enter" style={{ background: 'var(--green-bg)', borderBottom: '3px solid var(--green-pass)', padding: '24px 32px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--green-pass)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>✓</div>
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--green-pass)', letterSpacing: 0.3 }}>COMPLIANT</div>
-              <div style={{ fontSize: 13, color: 'var(--green-pass)', opacity: 0.85 }}>Auto-remediated · XYZ Bank · Home Loan Approval v3.2-fixed · 18 Apr 2026</div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div className="pill pill-green">✓ All thresholds met</div>
-              <div className="pill pill-teal">✦ AIF360 Reweighing applied</div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={{ background: 'var(--red-bg)', borderBottom: '3px solid var(--red-fail)', padding: '24px 32px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--red-fail)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>⚠</div>
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--red-fail)', letterSpacing: 0.3 }}>NON-COMPLIANT</div>
-              <div style={{ fontSize: 13, color: 'var(--red-fail)', opacity: 0.85 }}>Immediate action required · XYZ Bank · Home Loan Approval v3.2 · 18 Apr 2026</div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div className="pill pill-red">⚠ 3 violations</div>
-              <div className="pill pill-green">◉ 2 India proxies</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* One-click fix strip */}
-      {!compliant && fixState === 'idle' && (
-        <div style={{ maxWidth: 1100, margin: '24px auto 0', padding: '0 24px' }}>
-          <div style={{ background: 'linear-gradient(135deg, #0F766E 0%, #134E4A 100%)', borderRadius: 16, padding: '24px 28px', color: '#fff', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', boxShadow: '0 12px 32px rgba(15,118,110,0.25)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>✦</div>
-            <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>One-click automated remediation</div>
-              <div style={{ fontSize: 13, opacity: 0.85 }}>Apply AIF360 Reweighing + drop proxy features. Get a fixed CSV + compliance trail in seconds.</div>
-            </div>
-            <button onClick={runFix} style={{ background: '#fff', color: 'var(--teal)', padding: '0 22px', height: 48, borderRadius: 10, fontWeight: 600, fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
-              ✦ Generate Fixed Dataset
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Fixed CSV download strip */}
-      {compliant && (
-        <div className="page-enter" style={{ maxWidth: 1100, margin: '24px auto 0', padding: '0 24px' }}>
-          <div className="card" style={{ padding: 20, display: 'flex', alignItems: 'center', gap: 16, borderLeft: '4px solid var(--teal)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--teal-bg)', color: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>📄</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{fileMeta ? fileMeta.fileName.replace(/\.[^/.]+$/, "") + "_FIXED.csv" : "home_loan_applicants_2015_2025_FIXED.csv"}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>47,832 rows · reweighed · Father's Occupation removed · {fileMeta ? fileMeta.fileSize : "8.4 MB"}</div>
-            </div>
-            <button className="btn btn-primary">↓ Download fixed CSV</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 0' }}>
-        <Stepper active={3} />
-
-        {/* KPI cards */}
-        <div className="kpi-grid" style={{ marginBottom: 24 }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
+        
+        {/* 1. 4 Big Numbers at the top */}
+        <div className="kpi-grid" style={{ marginBottom: 40 }}>
           {kpis.map(k => (
-            <div key={k.l} className="card" style={{ padding: 20, position: 'relative' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: k.bg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 999, background: k.color }} />
-              </div>
-              {k.delta && (
-                <div style={{ position: 'absolute', top: 16, right: 16, fontSize: 11, fontWeight: 600, color: 'var(--green-pass)', background: 'var(--green-bg)', padding: '3px 8px', borderRadius: 999 }}>{k.delta}</div>
-              )}
-              <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{k.v}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-grey)', marginTop: 4 }}>{k.l}</div>
+            <div key={k.l} className="card" style={{ padding: '24px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.v}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-grey)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k.l}</div>
             </div>
           ))}
         </div>
 
-        {/* Metrics */}
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
-          Fairness metrics
-          {compliant && <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--green-pass)', marginLeft: 8 }}>· post-remediation</span>}
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-          <MetricCard
-            name="Demographic Parity"
-            score={compliant ? '0.84' : '0.43'}
-            verdict={compliant ? 'PASS' : 'FAIL'}
-            breakdown={compliant
-              ? [{ label: 'Men', val: 69, color: 'var(--teal)' }, { label: 'Women', val: 65, color: 'var(--green-pass)' }]
-              : [{ label: 'Men', val: 71, color: 'var(--teal)' }, { label: 'Women', val: 43, color: 'var(--red-fail)' }]}
-            threshold={80}
-            note={compliant ? 'Parity gap closed to 4pp. Meets EU AI Act threshold.' : 'Women approved 28% less often. EU AI Act requires parity above 80%.'}
-          />
-          <MetricCard
-            name="Disparate Impact"
-            score={compliant ? '0.83' : '0.60'}
-            verdict={compliant ? 'PASS' : 'FAIL'}
-            single={{ val: compliant ? 83 : 60, color: compliant ? 'var(--green-pass)' : 'var(--red-fail)' }}
-            threshold={80}
-            note={compliant ? 'Above the four-fifths rule. DPDP Act compliant.' : 'Legally actionable under the four-fifths rule. Threshold: 0.80.'}
-          />
-          <MetricCard
-            name="Equalized Odds"
-            score={compliant ? '3pp gap' : '24pp gap'}
-            verdict={compliant ? 'PASS' : 'FAIL'}
-            breakdown={compliant
-              ? [{ label: 'Men wrongly rejected', val: 10, color: 'var(--teal)' }, { label: 'Women wrongly rejected', val: 13, color: 'var(--green-pass)' }]
-              : [{ label: 'Men wrongly rejected', val: 9, color: 'var(--teal)' }, { label: 'Women wrongly rejected', val: 34, color: 'var(--red-fail)' }]}
-            note={compliant ? 'False-negative rate balanced across groups.' : 'False-negative rate much higher for women.'}
-          />
-          <MetricCard
-            name="Calibration"
-            score="0.88"
-            verdict="PASS"
-            single={{ val: 88, color: 'var(--green-pass)' }}
-            note="Predictions calibrated across groups."
-          />
-          <MetricCard
-            name="Individual Fairness"
-            score="0.82"
-            verdict="PASS"
-            single={{ val: 82, color: 'var(--green-pass)' }}
-            note="Similar applicants receive similar outcomes."
-          />
+        {/* 2. Gemini explanation first */}
+        <div className="card" style={{ padding: 24, borderLeft: '4px solid var(--purple)', marginBottom: 32, background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--purple-bg)', color: 'var(--purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>G</div>
+            <h3 style={{ fontSize: 18, margin: 0, fontWeight: 700 }}>Gemini Explanation</h3>
+            <div className="pill pill-purple" style={{ marginLeft: 'auto', background: 'var(--purple-bg)', color: 'var(--purple)', border: 'none' }}>Insights</div>
+          </div>
+          {compliant ? (
+            <p style={{ fontSize: 15, color: 'var(--text-dark)', lineHeight: 1.6, margin: 0 }}>
+              Remediation complete. After applying AIF360 Reweighing to the pincode groups and dropping <b>Father's Occupation</b>, the model now scores women and men with equivalent income & credit history within 4 percentage points of each other. The previously flagged applicant <b>Priya Sharma</b> re-scored from 0.43 to <b style={{ color: 'var(--green-pass)' }}>0.52</b>.
+            </p>
+          ) : (
+            <p style={{ fontSize: 15, color: 'var(--text-dark)', lineHeight: 1.6, margin: 0 }}>
+              Your Home Loan Approval v3.2 model systematically rejects women at 28 percentage points higher than identically-qualified men. The root cause is <b>pincode</b>: neighbourhoods 560034–560099 are predominantly women-led households, and the model has learned to penalise them indirectly. <b>Priya Sharma</b>, a 28-year-old software engineer, was scored 0.43 vs a man with identical income and credit history scored 0.51. The gap is entirely pincode-driven.
+            </p>
+          )}
         </div>
 
-        {/* India module */}
-        <div className="card" style={{ background: 'var(--green-bg)', border: '1px solid #A5D6A7', padding: 20, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--green-pass)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>◉</div>
-            <h3 style={{ fontSize: 16, margin: 0 }}>India Context Module</h3>
-            <div className="pill" style={{ background: '#fff', color: 'var(--green-pass)', border: '1px solid #A5D6A7' }}>Unique to FairSight</div>
+        {/* 2.5 Visual Charts */}
+        <div className="card" style={{ padding: 24, marginBottom: 32, background: '#fff' }}>
+          <h3 style={{ fontSize: 18, margin: '0 0 20px 0', fontWeight: 700 }}>Approval Rates by Gender</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart data={[{ name: 'Approval Rate', Men: compliant ? 84 : 82, Women: compliant ? 80 : 54 }]} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 14, fontWeight: 600 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} tickFormatter={(val) => `${val}%`} domain={[0, 100]} />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }} 
+                  contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                  formatter={(value) => [`${value}%`]}
+                />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: 20 }} />
+                <Bar dataKey="Men" fill="#0F766E" radius={[6, 6, 0, 0]} barSize={80} />
+                <Bar dataKey="Women" fill={compliant ? "#14B8A6" : "#EF4444"} radius={[6, 6, 0, 0]} barSize={80} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="india-module-grid">
+        </div>
+
+        {/* 3. Fairness metrics */}
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 20, marginBottom: 16, fontWeight: 700 }}>Fairness Metrics</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <MetricCard
+              name="Demographic Parity"
+              score={compliant ? '0.84' : '0.43'}
+              verdict={compliant ? 'PASS' : 'FAIL'}
+              val={compliant ? 84 : 43}
+              note={compliant ? 'Parity gap closed to 4pp. Meets EU AI Act threshold.' : 'Women approved 28% less often. EU AI Act requires parity above 80%.'}
+            />
+            <MetricCard
+              name="Disparate Impact"
+              score={compliant ? '0.83' : '0.60'}
+              verdict={compliant ? 'PASS' : 'FAIL'}
+              val={compliant ? 83 : 60}
+              note={compliant ? 'Above the four-fifths rule. DPDP Act compliant.' : 'Legally actionable under the four-fifths rule. Threshold: 0.80.'}
+            />
+            <MetricCard
+              name="Equalized Odds"
+              score={compliant ? '3pp gap' : '24pp gap'}
+              verdict={compliant ? 'PASS' : 'FAIL'}
+              val={compliant ? 90 : 40}
+              note={compliant ? 'False-negative rate balanced across groups.' : 'False-negative rate much higher for women.'}
+            />
+          </div>
+        </div>
+
+        {/* 4. India proxies */}
+        <div className="card" style={{ background: '#E8F5E9', border: '1px solid #C8E6C9', padding: 24, marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--green-pass)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>◉</div>
+            <h3 style={{ fontSize: 18, margin: 0, fontWeight: 700, color: '#1B5E20' }}>India Context Module</h3>
+            <div className="pill" style={{ background: '#fff', color: 'var(--green-pass)', border: '1px solid #A5D6A7', marginLeft: 'auto' }}>FairSight Exclusive</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
               {
                 title: 'Pincode 560034–560099',
@@ -323,95 +274,73 @@ export default function Results() {
                   : 'Socioeconomic proxy — disallowed under DPDP Act Section 4(1).',
               },
             ].map(item => (
-              <div key={item.title} style={{ background: '#fff', padding: 14, borderRadius: 10, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 999, background: compliant ? 'var(--green-pass)' : 'var(--red-fail)', marginTop: 6, flexShrink: 0 }} />
+              <div key={item.title} style={{ background: '#fff', padding: 16, borderRadius: 12, display: 'flex', gap: 12, alignItems: 'flex-start', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ width: 10, height: 10, borderRadius: 999, background: compliant ? 'var(--green-pass)' : 'var(--red-fail)', marginTop: 6, flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{item.title} {compliant && '✓'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-grey)' }}>{item.desc}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1B5E20', marginBottom: 2 }}>{item.title} {compliant && '✓'}</div>
+                  <div style={{ fontSize: 13, color: '#4CAF50' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Gemini explanation */}
-        <div className="card" style={{ padding: 20, borderLeft: '4px solid var(--purple)', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--purple-bg)', color: 'var(--purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>G</div>
-            <h3 style={{ fontSize: 16, margin: 0 }}>Gemini explanation</h3>
-            <div className="pill pill-orange" style={{ marginLeft: 'auto' }}>AI-generated · verify</div>
+        {/* 5. Fix steps */}
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 20, marginBottom: 16, fontWeight: 700 }}>Recommended Fixes</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              { t: "Remove Father's Occupation from feature set", s: 'Blocks the most obvious socioeconomic proxy.' },
+              { t: 'Apply AIF360 Reweighing to pincode groups', s: 'Re-balances training weights by neighbourhood.' },
+              { t: 'Re-train & re-audit with fixed feature set', s: 'Target: disparate impact ≥ 0.80.' },
+            ].map((item, i) => (
+              <div key={i} className="card" style={{ padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 999, background: 'var(--teal-bg)', color: 'var(--teal)', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{item.t}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-grey)' }}>{item.s}</div>
+                </div>
+              </div>
+            ))}
           </div>
-          {compliant ? (
-            <p style={{ fontSize: 14, color: 'var(--text-grey)', lineHeight: 1.6, margin: 0 }}>
-              Remediation complete. After applying AIF360 Reweighing to the pincode groups and dropping <b style={{ color: 'var(--text-dark)' }}>Father's Occupation</b>, the model now scores women and men with equivalent income &amp; credit history within 4 percentage points of each other. The previously flagged applicant <b style={{ color: 'var(--text-dark)' }}>Priya Sharma</b> re-scored from <b>0.43</b> to <b style={{ color: 'var(--green-pass)' }}>0.52</b>.
-            </p>
-          ) : (
-            <p style={{ fontSize: 14, color: 'var(--text-grey)', lineHeight: 1.6, margin: 0 }}>
-              Your Home Loan Approval v3.2 model systematically rejects women at 28 percentage points higher than identically-qualified men. The root cause is <b style={{ color: 'var(--text-dark)' }}>pincode</b>: neighbourhoods 560034–560099 are predominantly women-led households, and the model has learned to penalise them indirectly. <b style={{ color: 'var(--text-dark)' }}>Priya Sharma</b>, a 28-year-old software engineer, was scored <b>0.43</b> vs a man with identical income and credit history scored <b>0.51</b>. The gap is entirely pincode-driven.
-            </p>
-          )}
         </div>
 
-        {/* Remediation plan / trail */}
-        {compliant ? (
-          <div className="card page-enter" style={{ background: 'var(--green-bg)', border: '1px solid #A5D6A7', padding: 20, marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h3 style={{ fontSize: 16, color: '#1B5E20', margin: 0 }}>Applied automated fixes</h3>
-              <div className="pill pill-green" style={{ marginLeft: 'auto' }}>✓ Logged for audit</div>
+        {/* 6. One-click fix card */}
+        {!compliant && fixState === 'idle' && (
+          <div style={{ background: 'linear-gradient(135deg, #111827 0%, #1F2937 100%)', borderRadius: 20, padding: 32, color: '#fff', marginBottom: 40, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>✦</div>
+              <div style={{ flex: 1, minWidth: 280 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>One-click Automated Remediation</div>
+                <div style={{ fontSize: 14, opacity: 0.7, lineHeight: 1.5 }}>Apply AIF360 Reweighing and drop proxy features instantly. Generate a compliant model trail in seconds.</div>
+              </div>
+              <button onClick={runFix} style={{ background: '#fff', color: '#111827', padding: '0 28px', height: 56, borderRadius: 12, fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
+                Apply Fixes Now
+              </button>
             </div>
-            <p style={{ fontSize: 13, color: '#2E7D32', marginBottom: 14 }}>These actions are recorded in the Compliance Report as your DPDP Act legal trail.</p>
-            {[
-              ["Dropped feature: Father's Occupation", 'DPDP Act § 4(1) — socioeconomic proxy removed from training set.'],
-              ['AIF360 Reweighing on pincode groups', 'Re-balanced training weights across 47,832 rows in 8 neighbourhood clusters.'],
-              ['Automated re-audit against all 8 metrics', '3 of 3 failing metrics now PASS — disparate impact 0.60 → 0.83.'],
-            ].map(([t, s], i) => (
-              <div key={t} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #C8E6C9' }}>
-                <div style={{ width: 24, height: 24, borderRadius: 999, background: 'var(--green-pass)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 13 }}>✓</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1B5E20' }}>{t}</div>
-                  <div style={{ fontSize: 12, color: '#2E7D32' }}>{s}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="card" style={{ background: '#E3F2FD', border: '1px solid #90CAF9', padding: 20, marginBottom: 24 }}>
-            <h3 style={{ fontSize: 16, marginBottom: 4, color: '#0D47A1', margin: 0 }}>Remediation plan</h3>
-            <p style={{ fontSize: 13, color: '#1565C0', margin: '8px 0 14px' }}>Apply in order. Expected improvement: 0.60 → 0.83 disparate impact.</p>
-            {[
-              ["Remove Father's Occupation from feature set", 'Blocks the most obvious socioeconomic proxy.'],
-              ['Apply AIF360 Reweighing to pincode groups', 'Re-balances training weights by neighbourhood.'],
-              ['Re-train & re-audit with fixed feature set', 'Target: disparate impact ≥ 0.80.'],
-            ].map(([t, s], i) => (
-              <div key={t} style={{ display: 'flex', gap: 12, padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #BBDEFB' }}>
-                <div style={{ width: 24, height: 24, borderRadius: 999, background: '#fff', color: '#0D47A1', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0D47A1' }}>{t}</div>
-                  <div style={{ fontSize: 12, color: '#1565C0' }}>{s}</div>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* 7. 3 action buttons at the bottom */}
         <div className="action-btns-grid">
-          <button className="btn btn-purple btn-lg" onClick={() => navigate('/gemini-chat')}>
-            G Ask Gemini →
+          <button className="btn btn-outline btn-lg" style={{ height: 56, borderRadius: 12, fontWeight: 600 }} onClick={() => navigate('/upload')}>
+            ↺ Re-audit
           </button>
-          <button className="btn btn-primary btn-lg" onClick={() => navigate('/report')}>
-            ↓ {compliant ? 'Download compliance report' : 'Download PDF'}
+          <button className="btn btn-primary btn-lg" style={{ height: 56, borderRadius: 12, fontWeight: 600 }} onClick={handleDownloadReport} disabled={downloading}>
+            {downloading ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                Generating...
+              </span>
+            ) : (
+              '↓ Download Report'
+            )}
           </button>
-          {compliant ? (
-            <button className="btn btn-outline btn-lg" onClick={() => { setFixState('idle'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
-              ↺ View original audit
-            </button>
-          ) : (
-            <button className="btn btn-outline btn-lg" onClick={() => navigate('/upload')}>
-              ↺ Re-audit with fixed model
-            </button>
-          )}
+          <button className="btn btn-purple btn-lg" style={{ height: 56, borderRadius: 12, fontWeight: 600 }} onClick={() => navigate('/gemini-chat')}>
+            Ask Gemini →
+          </button>
         </div>
+
       </div>
     </div>
   )

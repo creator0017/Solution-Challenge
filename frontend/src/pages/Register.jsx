@@ -11,7 +11,15 @@ export default function Register() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [err, setErr] = useState('')
 
-  const strength      = form.pwd.length === 0 ? 0 : form.pwd.length < 6 ? 1 : form.pwd.length < 9 ? 2 : 3
+  const checkStrength = (pwd) => {
+    if (!pwd) return 0;
+    let s = 0;
+    if (pwd.length >= 8) s += 1;
+    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) s += 1;
+    if (/[0-9!@#$%^&*]/.test(pwd)) s += 1;
+    return s === 0 && pwd.length > 0 ? 1 : s;
+  }
+  const strength      = checkStrength(form.pwd)
   const strengthLabel = ['', 'Weak', 'Fair', 'Strong'][strength]
   const strengthColor = ['#E5E7EB', '#C62828', '#E65100', '#2E7D32'][strength]
   const mismatch      = form.confirm && form.pwd !== form.confirm
@@ -63,12 +71,21 @@ export default function Register() {
 
   return (
     <div className="page-enter" style={{ display: 'grid', gridTemplateColumns: '45% 55%', minHeight: '100vh' }}>
-      <AuthLeft />
+      <AuthLeft 
+        header="Start Your Fairness Journey"
+        features={[
+          ['No-Code Auditing', 'Join today and start auditing your AI models in under 60 seconds—no coding required.'],
+          ['India Context Ready', 'Get immediate access to our specialized module for regional and surname bias detection.'],
+          ['Gemini AI Insights', 'Sign up to receive plain-English explanations for every complex mathematical finding.'],
+          ['DPDP Ready', 'Start building your legal defense with reports aligned with the DPDP Act 2023.'],
+        ]}
+        summary="Create a free account to instantly detect hidden biases in your data and ensure legal compliance."
+      />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
         <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 440 }}>
           <h1 style={{ fontSize: 26, marginBottom: 6 }}>Create your account</h1>
-          <div style={{ color: 'var(--text-grey)', fontSize: 14, marginBottom: 24 }}>Free to start — no credit card needed</div>
+          <div style={{ color: 'var(--text-grey)', fontSize: 14, marginBottom: 24, lineHeight: 1.4 }}>Create a free account to instantly detect hidden biases in your data and ensure legal compliance.</div>
 
           {err && (
             <div className="shake" style={{ background: 'var(--red-bg)', border: '1px solid #FFCDD2', color: 'var(--red-fail)', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>

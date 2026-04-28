@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
     const unsubscribe = observeAuth(async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser)
+        setLoading(false) // Unblock the UI immediately
         try {
           const prof = await getUserProfile(firebaseUser.uid)
           setProfile(prof)
@@ -21,8 +22,8 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null)
         setProfile(null)
+        setLoading(false)
       }
-      setLoading(false)
     })
     return () => unsubscribe()
   }, [])

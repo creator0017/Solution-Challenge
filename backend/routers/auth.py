@@ -29,11 +29,11 @@ try:
             firebase_admin.initialize_app(cred)
         firebase_auth = fb_auth
         firebase_admin_available = True
-        print("✅ Firebase Admin SDK initialised")
+        print("[OK] Firebase Admin SDK initialised")
     else:
-        print("⚠️  serviceAccountKey.json not found — running in demo mode (no real auth)")
+        print("[WARN] serviceAccountKey.json not found - running in demo mode (no real auth)")
 except ImportError:
-    print("⚠️  firebase-admin not installed — running in demo mode")
+    print("[WARN] firebase-admin not installed - running in demo mode")
 
 
 # ── In-memory user store for demo mode ───────────────────────────────────────
